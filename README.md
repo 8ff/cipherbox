@@ -5,6 +5,8 @@
 This is library aims to simplify encryption and decryption capabilities using the [chacha20poly1305](https://pkg.go.dev/golang.org/x/crypto/chacha20poly1305) and [scrypt](https://pkg.go.dev/golang.org/x/crypto/scrypt) hash algorithms. It is designed to handle both chunks and streams of data, and can be used either as a library or as a command line tool located in the [cmd/cipherCli](cmd/cipherCli) directory. The library is intended to be user-friendly and easy to integrate into existing projects, while providing robust encryption and decryption functionality.
 
 ## Library usage
+
+### Chunks
 ```go
 package main
 
@@ -57,7 +59,7 @@ foo@bar:~$ cipherCli % echo test | CKEY=test go run cipherCli.go e | CKEY=test g
 test
 ```
 
-## Stream functions
+## Streams
 The StreamEncrypt and StreamDecrypt functions can be used to encrypt or decrypt large amounts of data in a streaming fashion, without having to load the entire data into memory at once. These functions take an io.Reader as input and an io.Writer as output, and encrypt or decrypt the data in chunks of a specified size.
 
 Here's an example of how to use the StreamEncrypt and StreamDecrypt functions:
@@ -98,3 +100,10 @@ func main() {
 
 In this example, we initialize the cipher using the Init function, and then use the StreamEncrypt and StreamDecrypt functions to encrypt or decrypt data from os.Stdin and write the result to os.Stdout. We use a chunk size of 10240 bytes (10KB) for both functions.
 Note that the StreamEncrypt and StreamDecrypt functions handle reading and writing data in chunks automatically, so there's no need to manually read or write data in a loop.
+
+## Command line usage
+```bash
+foo@bar:~$ cd cmd/streamCli
+foo@bar:~$ streamCli % echo test | CKEY=test go run streamCli.go e | CKEY=test go run streamCli.go d
+test
+```
