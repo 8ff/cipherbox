@@ -14,7 +14,7 @@ import (
 	"bytes"
 	"log"
 
-	cipher "github.com/8ff/cipherbox"
+	cipher "github.com/8ff/cipherbox/pkg/cc2p1305_scrypt"
 )
 
 func main() {
@@ -72,7 +72,7 @@ import (
     "log"
     "os"
 
-    cipher "github.com/8ff/cipherbox"
+    cipher "github.com/8ff/cipherbox/pkg/cc2p1305_scrypt"
 )
 
 func main() {
