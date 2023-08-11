@@ -36,21 +36,29 @@ func (c *Params) Encrypt(data []byte) ([]byte, error) {
 		return nil, fmt.Errorf("data chunk is too big, max size is : %d bytes", ^uint32(0))
 	}
 
+	// Generate a random key salt
 	keySalt := make([]byte, c.SaltSize)
 	if _, err := rand.Read(keySalt); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error generating key salt: %s", err)
 	}
 
+	// Hash the key with the salt
 	hashedKey, err := scrypt.Key([]byte(c.Key[:c.KeySize]), keySalt, 1<<15, 8, 1, 32)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error hashing key: %s", err)
 	}
-	chunk := make([]byte, 0)
-	aead, _ := chacha20poly1305.NewX(hashedKey[:])
-	nonce := make([]byte, c.NonceSize)
 
+	// Create a buffer to hold the encrypted data
+	chunk := make([]byte, 0)
+	aead, err := chacha20poly1305.NewX(hashedKey[:])
+	if err != nil {
+		return nil, fmt.Errorf("error creating aead: %s", err)
+	}
+
+	// Generate a random nonce
+	nonce := make([]byte, c.NonceSize)
 	if _, err := rand.Read(nonce); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error generating nonce: %s", err)
 	}
 	chunk = append(chunk, nonce...)
 	chunk = append(chunk, keySalt...)
@@ -72,20 +80,29 @@ func (c *Params) Decrypt(data []byte) ([]byte, error) {
 		return nil, fmt.Errorf("key is too short, expecting %d bytes", c.KeySize)
 	}
 
+	// Check if data is bigger than Uint32
 	chunkSize := binary.BigEndian.Uint32(data[:4])
 	if uint32(len(data[4:])) != chunkSize {
 		return nil, io.ErrUnexpectedEOF
 	}
+
 	nonce := data[4 : 4+c.NonceSize]
 	keySalt := data[4+c.NonceSize : 4+c.NonceSize+c.SaltSize]
 	hashedKey, err := scrypt.Key([]byte(c.Key[:c.KeySize]), keySalt, 1<<15, 8, 1, 32)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error hashing key: %s", err)
 	}
-	aead, _ := chacha20poly1305.NewX(hashedKey[:])
+
+	// Create a buffer to hold the encrypted data
+	aead, err := chacha20poly1305.NewX(hashedKey[:])
+	if err != nil {
+		return nil, fmt.Errorf("error creating aead: %s", err)
+	}
+
+	// Decrypt the data
 	decrypted, err := aead.Open(nil, nonce, data[4+c.NonceSize+c.SaltSize:], nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error decrypting data: %s", err)
 	}
 	return decrypted, nil
 }
@@ -100,27 +117,33 @@ func (c *Params) StreamEncrypt(r io.Reader, w io.Writer, chunkSize int) error {
 	// Generate a random key salt
 	keySalt := make([]byte, c.SaltSize)
 	if _, err := rand.Read(keySalt); err != nil {
-		return err
+		return fmt.Errorf("error generating key salt: %s", err)
 	}
 
 	// Write the key salt to the writer
 	if _, err := w.Write(keySalt); err != nil {
-		return err
+		return fmt.Errorf("error writing key salt: %s", err)
 	}
 
+	// Hash the key with the salt
 	hashedKey, err := scrypt.Key([]byte(c.Key[:c.KeySize]), keySalt, 1<<15, 8, 1, 32)
 	if err != nil {
-		return err
+		return fmt.Errorf("error hashing key: %s", err)
 	}
-	aead, _ := chacha20poly1305.NewX(hashedKey[:])
-	nonce := make([]byte, c.NonceSize)
 
-	// Write the nonce to the writer
+	// Create a buffer to hold the encrypted data
+	aead, err := chacha20poly1305.NewX(hashedKey[:])
+	if err != nil {
+		return fmt.Errorf("error creating aead: %s", err)
+	}
+
+	// Generate a random nonce
+	nonce := make([]byte, c.NonceSize)
 	if _, err := rand.Read(nonce); err != nil {
-		return err
+		return fmt.Errorf("error generating nonce: %s", err)
 	}
 	if _, err := w.Write(nonce); err != nil {
-		return err
+		return fmt.Errorf("error writing nonce: %s", err)
 	}
 
 	// Encrypt and write the data in chunks
@@ -128,7 +151,7 @@ func (c *Params) StreamEncrypt(r io.Reader, w io.Writer, chunkSize int) error {
 	for {
 		n, err := r.Read(buf)
 		if err != nil && err != io.EOF {
-			return err
+			return fmt.Errorf("error reading data: %s", err)
 		}
 		if n == 0 {
 			break
@@ -140,7 +163,7 @@ func (c *Params) StreamEncrypt(r io.Reader, w io.Writer, chunkSize int) error {
 
 		// Write the encrypted data to the writer
 		if _, err := w.Write(encBuf); err != nil {
-			return err
+			return fmt.Errorf("error writing encrypted data: %s", err)
 		}
 	}
 
@@ -157,20 +180,26 @@ func (c *Params) StreamDecrypt(r io.Reader, w io.Writer, chunkSize int) error {
 	// Read the key salt from the reader
 	keySalt := make([]byte, c.SaltSize)
 	if _, err := io.ReadFull(r, keySalt); err != nil {
-		return err
+		return fmt.Errorf("error reading key salt: %s", err)
 	}
 
 	// Read the nonce from the reader
 	nonce := make([]byte, c.NonceSize)
 	if _, err := io.ReadFull(r, nonce); err != nil {
-		return err
+		return fmt.Errorf("error reading nonce: %s", err)
 	}
 
+	// Hash the key with the salt
 	hashedKey, err := scrypt.Key([]byte(c.Key[:c.KeySize]), keySalt, 1<<15, 8, 1, 32)
 	if err != nil {
-		return err
+		return fmt.Errorf("error hashing key: %s", err)
 	}
-	aead, _ := chacha20poly1305.NewX(hashedKey[:])
+
+	// Create a buffer to hold the encrypted data
+	aead, err := chacha20poly1305.NewX(hashedKey[:])
+	if err != nil {
+		return fmt.Errorf("error creating aead: %s", err)
+	}
 
 	// Decrypt the data in chunks
 	buf := make([]byte, chunkSize+aead.Overhead())
@@ -178,7 +207,7 @@ func (c *Params) StreamDecrypt(r io.Reader, w io.Writer, chunkSize int) error {
 		// Read the encrypted data for the chunk from the reader
 		n, err := r.Read(buf)
 		if err != nil && err != io.EOF {
-			return err
+			return fmt.Errorf("error reading encrypted data: %s", err)
 		}
 		if n == 0 {
 			break
@@ -187,10 +216,10 @@ func (c *Params) StreamDecrypt(r io.Reader, w io.Writer, chunkSize int) error {
 		// Decrypt the chunk and write it to the output writer
 		decBuf, err := aead.Open(nil, nonce, buf[:n], nil)
 		if err != nil {
-			return err
+			return fmt.Errorf("error decrypting data: %s", err)
 		}
 		if _, err := w.Write(decBuf); err != nil {
-			return err
+			return fmt.Errorf("error writing decrypted data: %s", err)
 		}
 	}
 
