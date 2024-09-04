@@ -53,6 +53,10 @@ func main() {
 ```
 
 ## Command line usage
+### CARP
+[Carp: Secure Your Data with Ease](https://github.com/8ff/cipherbox/tree/main/cmd/carp)
+
+### Other examples
 ```bash
 foo@bar:~$ cd cmd/cipherCli
 foo@bar:~$ cipherCli % echo test | CKEY=test go run cipherCli.go e | CKEY=test go run cipherCli.go d
