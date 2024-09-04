@@ -11,7 +11,7 @@ jobs:
       RELEASE_NAME: Latest release
       RELEASE_BODY: Latest release
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      BINARY_PREFIX: ${{ github.event.repository.name }}
+      BINARY_PREFIX: "carp"
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v2
