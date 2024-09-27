@@ -4,8 +4,13 @@
 
 This is library aims to simplify encryption and decryption capabilities using the [chacha20poly1305](https://pkg.go.dev/golang.org/x/crypto/chacha20poly1305) and [scrypt](https://pkg.go.dev/golang.org/x/crypto/scrypt) hash algorithms. It is designed to handle both chunks and streams of data, and can be used either as a library or as a command line tool located in the [cmd/cipherCli](cmd/cipherCli) directory. The library is intended to be user-friendly and easy to integrate into existing projects, while providing robust encryption and decryption functionality.
 
-## Library usage
+## Tools
+### CHAP
+[CHAP: Secure Your Data with Ease](https://github.com/8ff/chap)<br>
+```CHAP (short for chachapoly) is a tool for encryption, decryption, and secure file wiping. It leverages the cipherbox library as a wrapper for the ChaCha20-Poly1305 cipher and scrypt key derivation, providing strong data protection.```
 
+
+## Library usage
 ### Chunks
 ```go
 package main
@@ -53,8 +58,6 @@ func main() {
 ```
 
 ## Command line usage
-### CARP
-[Carp: Secure Your Data with Ease](https://github.com/8ff/cipherbox/tree/main/cmd/carp)
 
 ### Other examples
 ```bash
